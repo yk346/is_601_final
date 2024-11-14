@@ -143,12 +143,12 @@ REST (Representational State Transfer) APIs are a set of principles that define 
 - **`app/operations.py`:** Contains arithmetic functions (`add`, `subtract`, `multiply`, `divide`).
 - **`main.py`:** Defines the FastAPI application, including API endpoints and serving the HTML page.
 - **`templates/index.html`:** The HTML frontend that interacts with the API.
-- **`static/scripts.js`:** JavaScript file that handles user interactions and API calls.
+
 
 #### **2.2 Understanding HTML and JavaScript in the Application**
 
 - **HTML (`index.html`):** Structures the web page with input fields and buttons for calculator operations.
-- **JavaScript (`scripts.js`):** Handles events like button clicks, retrieves input values, sends requests to the API, and updates the page with results.
+- **JavaScript:** Handles events like button clicks, retrieves input values, sends requests to the API, and updates the page with results.
 
 **Key Points:**
 
@@ -175,13 +175,21 @@ REST (Representational State Transfer) APIs are a set of principles that define 
 4. **Install Dependencies:**
    ```bash
    pip install -r requirements.txt
+5. Install Playwright and set up browsers:
+    ```bash
+    pip install playwright
+    playwright install
    ```
-5. **Run the Application:**
+6. **Run the Application:**
    ```bash
    uvicorn main:app --reload
    ```
-6. **Access the Application:**
+7. **Access the Application:**
    - Open a web browser and navigate to `http://localhost:8000`.
+
+8.  Stop the application with CTRL + C
+9.  Run the application with docker 
+10. Run the tests from within the container as per the video.
 
 ---
 
