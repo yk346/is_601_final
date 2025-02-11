@@ -3,6 +3,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import SQLAlchemyError
+from abc import ABC, abstractmethod, ABCMeta
+from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from .config import settings
 
@@ -44,9 +46,13 @@ def get_sessionmaker(engine):
 engine = get_engine()
 SessionLocal = get_sessionmaker(engine)
 
-# Base declarative class that our models will inherit from
-Base = declarative_base()
+class MyMeta(ABCMeta, DeclarativeMeta):
+    pass
 
+Base = declarative_base(metaclass=MyMeta)
+
+
+# Create the declarative base with the custom metaclass
 def get_db():
     """
     Dependency function that provides a database session.

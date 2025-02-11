@@ -5,20 +5,18 @@ from typing import Optional, Dict, Any
 
 from sqlalchemy import Column, String, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import relationship
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from pydantic import ValidationError
 
 from app.schemas.base import UserCreate
 from app.schemas.user import UserResponse, Token
-
-Base = declarative_base()
+from app.database import Base
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Move to config
+# Configuration constants (could be from your config.py)
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -36,7 +34,15 @@ class User(Base):
     is_verified = Column(Boolean, default=False, nullable=False)
     last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow, nullable=False)
+
+    # Relationship with Calculations
+    calculations = relationship(
+        "Calculation",
+        back_populates="user",
+        cascade="all, delete, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User(name={self.first_name} {self.last_name}, email={self.email})>"
@@ -70,26 +76,27 @@ class User(Base):
 
     @classmethod
     def register(cls, db, user_data: Dict[str, Any]) -> "User":
-        """Register a new user with validation."""
+        """
+        Register a new user with basic validation and Pydantic schema checks.
+        """
         try:
-            # Validate password length first
+            # Validate password length
             password = user_data.get('password', '')
-            if len(password) < 6:  # Strictly less than 6 characters
+            if len(password) < 6:
                 raise ValueError("Password must be at least 6 characters long")
-            
+
             # Check if email/username exists
             existing_user = db.query(cls).filter(
                 (cls.email == user_data.get('email')) |
                 (cls.username == user_data.get('username'))
             ).first()
-            
             if existing_user:
                 raise ValueError("Username or email already exists")
 
-            # Validate using Pydantic schema
+            # Validate with Pydantic schema
             user_create = UserCreate.model_validate(user_data)
-            
-            # Create new user instance
+
+            # Create user instance
             new_user = cls(
                 first_name=user_create.first_name,
                 last_name=user_create.last_name,
@@ -99,35 +106,32 @@ class User(Base):
                 is_active=True,
                 is_verified=False
             )
-            
             db.add(new_user)
             db.flush()
             return new_user
-            
         except ValidationError as e:
-            raise ValueError(str(e)) # pragma: no cover
+            raise ValueError(str(e))  # re-raise as ValueError
         except ValueError as e:
             raise e
 
     @classmethod
     def authenticate(cls, db, username: str, password: str) -> Optional[Dict[str, Any]]:
-        """Authenticate user and return token with user data."""
+        """Authenticate user and return a token with user data."""
         user = db.query(cls).filter(
             (cls.username == username) | (cls.email == username)
         ).first()
 
         if not user or not user.verify_password(password):
-            return None # pragma: no cover
+            return None
 
+        # Update last_login
         user.last_login = datetime.utcnow()
         db.commit()
 
-        # Create token response using Pydantic models
         user_response = UserResponse.model_validate(user)
         token_response = Token(
             access_token=cls.create_access_token({"sub": str(user.id)}),
             token_type="bearer",
             user=user_response
         )
-
         return token_response.model_dump()
