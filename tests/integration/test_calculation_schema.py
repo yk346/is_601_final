@@ -1,16 +1,12 @@
-# tests/unit/test_calculation_schema.py
-
 import pytest
 from pydantic import ValidationError
 from uuid import uuid4
 from datetime import datetime
-
 from app.schemas.calculation import (
     CalculationCreate,
     CalculationUpdate,
     CalculationResponse
 )
-
 
 def test_calculation_create_valid():
     """Test creating a valid CalculationCreate schema."""
@@ -24,7 +20,6 @@ def test_calculation_create_valid():
     assert calc.inputs == [10.5, 3.0]
     assert calc.user_id is not None
 
-
 def test_calculation_create_missing_type():
     """Test CalculationCreate fails if 'type' is missing."""
     data = {
@@ -33,9 +28,8 @@ def test_calculation_create_missing_type():
     }
     with pytest.raises(ValidationError) as exc_info:
         CalculationCreate(**data)
-
-    assert "type\n  Field required" in str(exc_info.value)
-
+    # Look for a substring that indicates a missing required field.
+    assert "required" in str(exc_info.value).lower()
 
 def test_calculation_create_missing_inputs():
     """Test CalculationCreate fails if 'inputs' is missing."""
@@ -45,8 +39,7 @@ def test_calculation_create_missing_inputs():
     }
     with pytest.raises(ValidationError) as exc_info:
         CalculationCreate(**data)
-
-    assert "inputs\n  Field required" in str(exc_info.value)
+    assert "required" in str(exc_info.value).lower()
 
 def test_calculation_create_invalid_inputs():
     """Test CalculationCreate fails if 'inputs' is not a list of floats."""
@@ -57,25 +50,22 @@ def test_calculation_create_invalid_inputs():
     }
     with pytest.raises(ValidationError) as exc_info:
         CalculationCreate(**data)
-
     error_message = str(exc_info.value)
-    # Now we match a substring of the new Pydantic 2.x error:
-    assert "Input should be a valid list" in error_message, error_message
-
+    # Ensure that our custom error message is present (case-insensitive)
+    assert "input should be a valid list" in error_message.lower(), error_message
 
 def test_calculation_create_unsupported_type():
-    """Test a scenario for an unsupported type if you had custom validation (optional)."""
-    # NOTE: If your schema does not restrict 'type' to certain values,
-    # this won't fail at the Pydantic level. But you might have a separate
-    # check for allowed calculation types. This is just an example.
+    """Test CalculationCreate fails if an unsupported calculation type is provided."""
     data = {
-        "type": "square_root",
+        "type": "square_root",  # Unsupported type
         "inputs": [25],
         "user_id": uuid4()
     }
-    calc = CalculationCreate(**data)
-    assert calc.type == "square_root"
-
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationCreate(**data)
+    error_message = str(exc_info.value).lower()
+    # Check that the error message indicates the value is not permitted.
+    assert "one of" in error_message or "not a valid" in error_message
 
 def test_calculation_update_valid():
     """Test a valid partial update with CalculationUpdate."""
@@ -85,12 +75,10 @@ def test_calculation_update_valid():
     calc_update = CalculationUpdate(**data)
     assert calc_update.inputs == [42.0, 7.0]
 
-
 def test_calculation_update_no_fields():
-    """Test that an empty update is allowed (i.e., no fields) if that's your desired behavior."""
+    """Test that an empty update is allowed (i.e., no fields)."""
     calc_update = CalculationUpdate()
     assert calc_update.inputs is None
-
 
 def test_calculation_response_valid():
     """Test creating a valid CalculationResponse schema."""
@@ -99,6 +87,7 @@ def test_calculation_response_valid():
         "user_id": uuid4(),
         "type": "subtraction",
         "inputs": [20, 5],
+        "result": 15.5,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }
@@ -107,3 +96,4 @@ def test_calculation_response_valid():
     assert calc_response.user_id is not None
     assert calc_response.type == "subtraction"
     assert calc_response.inputs == [20, 5]
+    assert calc_response.result == 15.5

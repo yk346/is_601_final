@@ -9,11 +9,9 @@ from app.models.calculation import (
     Division,
 )
 
-
 # Helper function to create a dummy user_id for testing.
 def dummy_user_id():
     return uuid.uuid4()
-
 
 def test_addition_get_result():
     """
@@ -23,7 +21,6 @@ def test_addition_get_result():
     addition = Addition(user_id=dummy_user_id(), inputs=inputs)
     result = addition.get_result()
     assert result == sum(inputs), f"Expected {sum(inputs)}, got {result}"
-
 
 def test_subtraction_get_result():
     """
@@ -35,7 +32,6 @@ def test_subtraction_get_result():
     result = subtraction.get_result()
     assert result == 12, f"Expected 12, got {result}"
 
-
 def test_multiplication_get_result():
     """
     Test that Multiplication.get_result returns the correct product.
@@ -44,7 +40,6 @@ def test_multiplication_get_result():
     multiplication = Multiplication(user_id=dummy_user_id(), inputs=inputs)
     result = multiplication.get_result()
     assert result == 24, f"Expected 24, got {result}"
-
 
 def test_division_get_result():
     """
@@ -56,7 +51,6 @@ def test_division_get_result():
     result = division.get_result()
     assert result == 10, f"Expected 10, got {result}"
 
-
 def test_division_by_zero():
     """
     Test that Division.get_result raises ValueError when dividing by zero.
@@ -65,7 +59,6 @@ def test_division_by_zero():
     division = Division(user_id=dummy_user_id(), inputs=inputs)
     with pytest.raises(ValueError, match="Cannot divide by zero."):
         division.get_result()
-
 
 def test_calculation_factory_addition():
     """
@@ -81,7 +74,6 @@ def test_calculation_factory_addition():
     assert isinstance(calc, Addition), "Factory did not return an Addition instance."
     assert calc.get_result() == sum(inputs), "Incorrect addition result."
 
-
 def test_calculation_factory_subtraction():
     """
     Test the Calculation.create factory method for subtraction.
@@ -95,7 +87,6 @@ def test_calculation_factory_subtraction():
     # Expected: 10 - 4 = 6
     assert isinstance(calc, Subtraction), "Factory did not return a Subtraction instance."
     assert calc.get_result() == 6, "Incorrect subtraction result."
-
 
 def test_calculation_factory_multiplication():
     """
@@ -111,7 +102,6 @@ def test_calculation_factory_multiplication():
     assert isinstance(calc, Multiplication), "Factory did not return a Multiplication instance."
     assert calc.get_result() == 24, "Incorrect multiplication result."
 
-
 def test_calculation_factory_division():
     """
     Test the Calculation.create factory method for division.
@@ -126,7 +116,6 @@ def test_calculation_factory_division():
     assert isinstance(calc, Division), "Factory did not return a Division instance."
     assert calc.get_result() == 10, "Incorrect division result."
 
-
 def test_calculation_factory_invalid_type():
     """
     Test that Calculation.create raises a ValueError for an unsupported calculation type.
@@ -138,7 +127,6 @@ def test_calculation_factory_invalid_type():
             inputs=[10, 3],
         )
 
-
 def test_invalid_inputs_for_addition():
     """
     Test that providing non-list inputs to Addition.get_result raises a ValueError.
@@ -147,7 +135,6 @@ def test_invalid_inputs_for_addition():
     with pytest.raises(ValueError, match="Inputs must be a list of numbers."):
         addition.get_result()
 
-
 def test_invalid_inputs_for_subtraction():
     """
     Test that providing fewer than two numbers to Subtraction.get_result raises a ValueError.
@@ -155,7 +142,6 @@ def test_invalid_inputs_for_subtraction():
     subtraction = Subtraction(user_id=dummy_user_id(), inputs=[10])
     with pytest.raises(ValueError, match="Inputs must be a list with at least two numbers."):
         subtraction.get_result()
-
 
 def test_invalid_inputs_for_division():
     """
