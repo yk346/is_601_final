@@ -11,82 +11,121 @@ from app.models.calculation import Calculation
 
 settings = get_settings()
 
+def utcnow():
+    """Helper function to get current UTC datetime"""
+    return datetime.now(timezone.utc)
+
 class User(Base):
+    """User model with authentication and token management capabilities."""
+    
     __tablename__ = "users"
     
-    # Use a PostgreSQL UUID primary key to match test expectations.
+    # Primary key and identifying fields
     id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    password = Column(String, nullable=False)
+    
+    # Personal information
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
-    email = Column(String, unique=True, nullable=False, index=True)
-    username = Column(String(50), unique=True, nullable=False, index=True)
-    password = Column(String, nullable=False)
+    
+    # Status flags
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
-    last_login = Column(DateTime, nullable=True)
-    # Columns expected by tests and response schemas.
-    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc), nullable=False)
     
-    # NEW: Relationship to calculations.
-    # Assumes that your Calculation model defines a foreign key to users.id and
-    # a relationship with back_populates="calculations".
-    calculations = relationship(Calculation, back_populates="user", cascade="all, delete-orphan")
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    calculations = relationship("Calculation", back_populates="user", cascade="all, delete-orphan")
     
     def __init__(self, *args, **kwargs):
-        # Allow "hashed_password" as an alias for "password".
+        """Initialize a new user, handling password hashing if provided."""
         if "hashed_password" in kwargs:
             kwargs["password"] = kwargs.pop("hashed_password")
         super().__init__(*args, **kwargs)
-    
+
+    def __str__(self):
+        """String representation of the user."""
+        return f"<User(name={self.first_name} {self.last_name}, email={self.email})>"
+
+    def update(self, **kwargs):
+        """
+        Update user attributes and ensure updated_at is refreshed.
+        
+        Args:
+            **kwargs: Attributes to update
+            
+        Returns:
+            User: The updated user instance
+        """
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        self.updated_at = utcnow()
+        return self
+
     @property
     def hashed_password(self):
         """Return the stored hashed password."""
         return self.password
 
-    def __str__(self):
-        return f"<User(name={self.first_name} {self.last_name}, email={self.email})>"
+    def verify_password(self, plain_password: str) -> bool:
+        """
+        Verify a plain-text password against this user's stored hashed password.
+        
+        Args:
+            plain_password: The plain-text password to verify
+            
+        Returns:
+            bool: True if password matches, False otherwise
+        """
+        from app.auth.jwt import verify_password
+        return verify_password(plain_password, self.password)
 
     @classmethod
     def hash_password(cls, password: str) -> str:
         """
         Hash a plain-text password using the application's password hashing utility.
+        
+        Args:
+            password: The plain-text password to hash
+            
+        Returns:
+            str: The hashed password
         """
         from app.auth.jwt import get_password_hash
         return get_password_hash(password)
-
-    def verify_password(self, plain_password: str) -> bool:
-        """
-        Verify a plain-text password against this user's stored hashed password.
-        """
-        from app.auth.jwt import verify_password
-        return verify_password(plain_password, self.password)
 
     @classmethod
     def register(cls, db, user_data: dict):
         """
         Register a new user.
 
-        Validates that:
-          - A password is provided and is at least 6 characters long.
-          - The email or username is not already in use.
-        
-        Hashes the password and creates a new user instance, adding it to the session.
-
+        Args:
+            db: SQLAlchemy database session
+            user_data: Dictionary containing user registration data
+            
+        Returns:
+            User: The newly created user instance
+            
         Raises:
-            ValueError: If the password is missing/too short or if the email/username already exists.
+            ValueError: If password is invalid or username/email already exists
         """
         password = user_data.get("password")
         if not password or len(password) < 6:
             raise ValueError("Password must be at least 6 characters long")
         
-        # Check for duplicate email or username.
+        # Check for duplicate email or username
         existing_user = db.query(cls).filter(
             or_(cls.email == user_data["email"], cls.username == user_data["username"])
         ).first()
         if existing_user:
             raise ValueError("Username or email already exists")
         
+        # Create new user instance
         hashed_password = cls.hash_password(password)
         user = cls(
             first_name=user_data["first_name"],
@@ -95,19 +134,23 @@ class User(Base):
             username=user_data["username"],
             password=hashed_password,
             is_active=True,
-            is_verified=False,
-            last_login=None  # created_at and updated_at are auto-set.
+            is_verified=False
         )
         db.add(user)
-        # Let the caller commit the transaction.
         return user
-
 
     @classmethod
     def authenticate(cls, db, username_or_email: str, password: str):
         """
-        Authenticate a user by username (or email) and password.
-        Returns token response data if successful, None if authentication fails.
+        Authenticate a user by username/email and password.
+        
+        Args:
+            db: SQLAlchemy database session
+            username_or_email: Username or email to authenticate
+            password: Password to verify
+            
+        Returns:
+            dict: Authentication result with tokens and user data, or None if authentication fails
         """
         user = db.query(cls).filter(
             or_(cls.username == username_or_email, cls.email == username_or_email)
@@ -117,17 +160,13 @@ class User(Base):
             return None
 
         # Update the last_login timestamp
-        user.last_login = datetime.now(timezone.utc)
+        user.last_login = utcnow()
         db.flush()
 
-        # Create access token
+        # Generate tokens
         access_token = cls.create_access_token({"sub": str(user.id)})
-        
-        # Create refresh token
         refresh_token = cls.create_refresh_token({"sub": str(user.id)})
-        
-        # Calculate token expiration
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_at = utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         return {
             "access_token": access_token,
@@ -138,30 +177,45 @@ class User(Base):
         }
 
     @classmethod
-    def create_refresh_token(cls, data: dict) -> str:
-        """Create a refresh token."""
-        from app.auth.jwt import create_token
-        from app.schemas.token import TokenType
-        return create_token(data["sub"], TokenType.REFRESH)
-
-    @classmethod
     def create_access_token(cls, data: dict) -> str:
         """
-        Create a JWT access token with the given payload.
+        Create a JWT access token.
         
-        The payload must include a "sub" key containing the user's identifier.
+        Args:
+            data: Token payload data
+            
+        Returns:
+            str: JWT access token
         """
         from app.auth.jwt import create_token
         from app.schemas.token import TokenType
         return create_token(data["sub"], TokenType.ACCESS)
 
     @classmethod
+    def create_refresh_token(cls, data: dict) -> str:
+        """
+        Create a JWT refresh token.
+        
+        Args:
+            data: Token payload data
+            
+        Returns:
+            str: JWT refresh token
+        """
+        from app.auth.jwt import create_token
+        from app.schemas.token import TokenType
+        return create_token(data["sub"], TokenType.REFRESH)
+
+    @classmethod
     def verify_token(cls, token: str):
         """
-        Verify a JWT token and return the user identifier if valid.
+        Verify a JWT token and return the user identifier.
         
+        Args:
+            token: JWT token to verify
+            
         Returns:
-            The user ID (as a UUID) if the token is valid, or None if the token is invalid.
+            UUID: User ID if token is valid, None otherwise
         """
         from app.core.config import settings
         from jose import jwt, JWTError
@@ -171,9 +225,8 @@ class User(Base):
             if sub is None:
                 return None
             try:
-                # Return the UUID instance.
                 return uuid.UUID(sub)
             except (ValueError, TypeError):
-                return sub
+                return None
         except JWTError:
             return None

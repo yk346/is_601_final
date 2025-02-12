@@ -102,7 +102,7 @@ class Calculation(Base, AbstractCalculation):
     __mapper_args__ = {
         "polymorphic_on": "type",
         "polymorphic_identity": "calculation",
-        "with_polymorphic": "*"
+        #"with_polymorphic": "*"
     }
 
 class Addition(Calculation):
