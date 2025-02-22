@@ -1,16 +1,16 @@
-# **Module 12: Implementing and Testing User & Calculation Routes**
+# **Module 13: JWT Login & Registration with Front-End and Playwright Tests**
 
 ## **Module Overview**
 
-In **Module 12**, you will connect your application’s **User** and **Calculation** models to **FastAPI routes**, enabling real **BREAD operations** on calculations and **user login/registration** flows. Although you already have secure user models and a calculation schema from previous modules, this is where you’ll finally expose these resources as **RESTful endpoints**. You’ll test these routes both **manually** (using OpenAPI docs) and via **integration tests** in your **CI/CD pipeline**, ensuring your service is stable before a front-end UI is added in Module 13.
+In **Module 13**, you will **focus specifically** on **user authentication** by creating a minimal **JWT-based** login and registration flow—**without** tackling the full BREAD functionality for calculations (that’s coming in **Module 14**). This module will have you build a **simple front-end** (HTML/CSS/JS) for **login and registration**, add **client-side validation**, and create **Playwright** tests to verify both **positive** (valid inputs) and **negative** (invalid data) scenarios in a **Docker-based CI/CD** pipeline.
 
 By the end of this module, you will:
 
-1. Create **FastAPI routes** for **user login/registration** (auth flows).  
-2. Implement **BREAD** endpoints (Browse, Read, Edit, Add, Delete) for your `Calculation` model.  
-3. Validate requests/responses with Pydantic (e.g., `UserCreate`, `UserLogin`, `CalculationCreate`, `CalculationRead`).  
-4. Write **integration tests** (using `pytest`) that confirm each route’s behavior in a Docker-based CI environment.  
-5. Continue building, testing, and deploying your Docker image to Docker Hub as part of your evolving final project.
+1. Implement **JWT login** (returning a token for valid credentials).  
+2. Implement **JWT registration** (creating a new user, returning a token or confirmation).  
+3. Build basic **front-end pages** for login and registration, with **client-side validation**.  
+4. Write **Playwright** end-to-end tests covering success (valid registration/login) and failure (invalid data, wrong credentials).  
+5. Continue using **Docker** and **GitHub Actions** to automate tests, pushing an updated image to Docker Hub if all tests pass.
 
 ### **Relevant Course Learning Outcomes (CLOs)**
 
@@ -24,84 +24,94 @@ By the end of this module, you will:
 
 ---
 
-## **Why Focus on User & Calculation Routes Now?**
+## **Why Focus on JWT Login & Registration Now?**
 
-1. **Complete the Server Logic:** Modules 10 and 11 gave you user and calculation models; now you’ll create the **routes** to actually manipulate this data.  
-2. **Foundational for Next Steps:** With endpoints in place, Module 13 can introduce a front-end or advanced testing frameworks on top of a stable, tested back-end.  
-3. **Incremental Development:** Testing endpoints thoroughly with `pytest` and OpenAPI ensures you have reliable REST APIs before layering UI interactions.
+1. **Incremental Development**: You already have user models and routes from previous modules—now you’ll concentrate solely on **secure authentication** before adding the full BREAD for calculations in Module 14.  
+2. **User-Centric UX**: A minimal front-end for registration/login clarifies how real users (or clients) interact with your secure system.  
+3. **Testing Confidence**: End-to-end (E2E) tests with **Playwright** confirm that the entire login/registration workflow functions as expected under various input conditions.
 
 ---
 
-## **Module 12 Outline**
+## **Module 13 Outline**
 
-1. **User Routes**  
-   - **Register** (signup) endpoint: Accepts `UserCreate` data, hashes passwords, and stores new users.  
-   - **Login** endpoint: Authenticates a user by verifying password hashes, potentially returning a session token (optional advanced feature).  
-   - Additional optional user endpoints if you want to handle update, delete, etc.
+1. **JWT-Based Registration and Login**  
+   - **/register** (or `/users/register`): Accepts new user data, returns a JWT or success message upon valid input.  
+   - **/login** (or `/users/login`): Checks credentials, returns a JWT upon success, or an error code upon failure.  
+   - Minimal token logic (e.g., `pyjwt`) to sign user ID/username, maybe with a short expiration.
 
-2. **Calculation Routes**  
-   - **Browse**: `GET /calculations` lists all.  
-   - **Read**: `GET /calculations/{id}` returns a single calculation.  
-   - **Edit**: `PUT`/`PATCH /calculations/{id}` updates a record.  
-   - **Add**: `POST /calculations` creates a new calculation (Add, Sub, Multiply, Divide).  
-   - **Delete**: `DELETE /calculations/{id}` removes a record.
+2. **Front-End Pages**  
+   - **register.html** (or integrated in `index.html`): A form prompting user info, including **basic validations** (email format, password length).  
+   - **login.html**: A form for email/password login, again with client-side checks.  
+   - On success, store the JWT (e.g., `localStorage`) for future requests, or just confirm success if you’re not implementing further routes yet.
 
-3. **Manual Testing with OpenAPI**  
-   - Explore the generated docs (e.g., `/docs` or `/redoc`).  
-   - Manually test each endpoint (user registration, login, calculation creation, etc.) for correct responses and data handling.
+3. **Client-Side Validation & Basic Security**  
+   - Email format checks (simple regex or `type="email"`).  
+   - Password length checks.  
+   - Possibly sanitize or carefully handle user-provided data to avoid trivial XSS in the front-end.
 
-4. **Integration Testing with Pytest**  
-   - Spin up a **PostgreSQL** container in GitHub Actions.  
-   - Test user endpoints (register + login).  
-   - Test each calculation endpoint (BREAD).  
-   - Validate status codes, JSON responses, DB changes.
+4. **Playwright E2E Testing**  
+   - **Positive Tests**:  
+     1. **Valid Registration**: Provide correct email/password meeting min length -> success message, user created.  
+     2. **Valid Login**: Provide correct credentials -> server returns JWT, front-end indicates success or stores token.  
+   - **Negative Tests**:  
+     1. **Short Password** or invalid email -> front-end shows error, server route not called or returns 400.  
+     2. **Wrong Credentials** -> server returns 401, front-end shows “invalid login” message.  
+   - Ensure each test asserts UI elements change accordingly (e.g., an error message div, or a success message).
 
-5. **CI/CD Continuation**  
-   - Keep your pipeline from prior modules, ensuring successful tests -> Docker Hub deployment.  
-   - This sets the stage for a front-end interface in Module 13.
+5. **Maintaining CI/CD**  
+   - In GitHub Actions:  
+     - Install and run **Playwright**.  
+     - Spin up your back-end + DB container.  
+     - Execute E2E tests. If they pass, push new Docker image to Docker Hub.
 
 ---
 
 ## **Hands-On Assignment**
 
-**Title:** User & Calculation Routes + Integration Testing  
+**Title:** JWT Login/Registration with Client-Side Validation & Playwright E2E  
 **Grading Type:** Points  
 
-### **Instructions:**
+### **Instructions (Detailed)**:
 
-1. **Implement User Endpoints**  
-   - **Register** (`POST /users/register`) using `UserCreate`.  
-   - **Login** (`POST /users/login`) verifying hashed passwords.  
-   - Optionally track user sessions/tokens if you wish to restrict certain endpoints to authenticated users.
+1. **JWT Login & Registration Routes**  
+   - **/register**:  
+     - Receives user info (username/email, password).  
+     - Validates (check duplicates, hash password, store in DB).  
+     - Returns a JWT or success response.  
+   - **/login**:  
+     - Valid credentials -> return JWT.  
+     - Invalid -> 401 Unauthorized.
 
-2. **Implement Calculation Endpoints (BREAD)**  
-   - **Browse** (`GET /calculations`)  
-   - **Read** (`GET /calculations/{id}`)  
-   - **Edit** (`PUT` or `PATCH /calculations/{id}`)  
-   - **Add** (`POST /calculations`)  
-   - **Delete** (`DELETE /calculations/{id}`)  
-   - Use your existing `CalculationCreate`, `CalculationRead` schemas and underlying SQLAlchemy model.
+2. **Front-End Pages**  
+   - **register.html**:  
+     - Fields for email, password, (optional) confirm password.  
+     - **Client-side** checks (email format, min password length).  
+     - On success (server responds 200/201), display success or store the JWT.  
+   - **login.html**:  
+     - Fields for email, password.  
+     - Client-side checks, minimal.  
+     - On success, store the JWT or display a success message.
 
-3. **Test Manually + OpenAPI**  
-   - Access `/docs` or `/redoc` on your FastAPI server.  
-   - Confirm endpoints accept/return the correct data.
+3. **Playwright E2E Tests**  
+   - **Positive**:  
+     1. Register with valid data (e.g., email format, pass length), confirm success message.  
+     2. Login with correct credentials, confirm success or token stored.  
+   - **Negative**:  
+     1. Register with short password -> front-end error or 400 from server, verify UI shows error.  
+     2. Login with wrong password -> server returns 401, UI shows invalid credentials message.  
+   - Ensure tests locate form fields, type invalid/valid data, submit, and check resulting UI states or server responses.
 
-4. **Write Integration Tests (pytest)**  
-   - **GitHub Actions**: Spin up Postgres as before.  
-   - **User Tests**: Register, login, verify data in DB.  
-   - **Calculation Tests**:  
-     - Create a new calculation, retrieve it, update it, delete it.  
-     - Confirm invalid data triggers errors (status codes, error responses).
+4. **CI/CD**  
+   - Retain your Docker-based pipeline from prior modules.  
+   - On each commit:  
+     - GitHub Actions spins up DB + server.  
+     - Runs Playwright tests.  
+     - If all pass, push image to Docker Hub.
 
-5. **Maintain CI/CD**  
-   - All tests (user + calculation) run automatically on each commit.  
-   - A successful run pushes a new Docker image to Docker Hub.
-
-6. **Submit**  
-   - **GitHub Repository Link** (with your own code):  
-     - In **README**, detail how to run integration tests + do manual checks via OpenAPI.  
-     - Link to your Docker Hub repository.  
-   - This module completes your back-end logic; you’ll add a front-end in Module 13.
+5. **Submit**  
+   - **GitHub Repo Link** with your own code (JWT routes, front-end forms, E2E tests).  
+   - **README**: Provide instructions for running front-end, E2E tests, and link to your Docker Hub repo.  
+   - Next module (Module 14) will add the full BREAD for calculations to the front-end.
 # **Grading Expectations**
 
 Your submissions for the **Hands-On Assignment** will be evaluated based on the following two criteria:
@@ -110,88 +120,95 @@ Your submissions for the **Hands-On Assignment** will be evaluated based on the 
 
 - **GitHub Repository Link:**
   - Provided and accessible.
-  - Contains all necessary files (`User` and `Calculation` routes, tests, GitHub Actions workflow).
+  - Contains all necessary files (`JWT` authentication routes, front-end code, Playwright tests, GitHub Actions workflow).
 
 - **Screenshots:**
   - **GitHub Actions Workflow:** Screenshot showing a successful run of the GitHub Actions workflow.
-  - **Application Running in Browser:** Screenshot demonstrating user registration/login and calculation endpoints operational.
+  - **Playwright E2E Tests:** Screenshot demonstrating Playwright tests passing.
+  - **Front-End Application:** Screenshot of the login and registration pages functioning correctly.
 
 - **Documentation:**
-  - Includes a reflection document addressing key experiences and challenges faced during the development and deployment process.
-  - README file contains instructions on how to run tests locally and links to the Docker Hub repository.
+  - Includes a reflection document addressing key experiences and challenges faced during the development and testing process.
+  - README file contains instructions on how to run the front-end, execute Playwright tests, and links to the Docker Hub repository.
 
-### **2. Functionality of User & Calculation Routes and CI/CD Pipeline (50 Points)**
+### **2. Functionality of JWT Authentication and CI/CD Pipeline (50 Points)**
 
-- **User Routes:**
-  - **Register** and **Login** endpoints implemented correctly with Pydantic validation and secure password handling.
-  
-- **Calculation Routes (BREAD):**
-  - **Browse**, **Read**, **Edit**, **Add**, and **Delete** endpoints implemented correctly.
-  - Proper validation of requests and responses using Pydantic schemas.
+- **JWT Authentication:**
+  - **Registration Endpoint:** `/register` correctly accepts user data, hashes passwords, and stores new users.
+  - **Login Endpoint:** `/login` authenticates users by verifying hashed passwords and returns a JWT upon successful login.
+  - **Pydantic Validation:** User data is validated using Pydantic schemas to ensure data integrity and security.
 
-- **Testing and CI/CD:**
-  - Comprehensive integration tests for user and calculation routes are written and pass successfully in the GitHub Actions workflow.
-  - CI/CD pipeline is properly configured to build, test, and deploy the Docker image to Docker Hub without errors.
-  - Docker image is functional and can be pulled from Docker Hub, running the application as expected.
+- **Front-End Integration:**
+  - **Login and Registration Pages:** Functional HTML/CSS/JS pages with client-side validation for email formats and password requirements.
+  - **Token Handling:** JWT tokens are correctly stored (e.g., in `localStorage`) and used for authenticated requests.
+
+- **Playwright E2E Tests:**
+  - **Positive Tests:** Successful user registration and login with valid inputs.
+  - **Negative Tests:** Proper handling of invalid inputs, such as short passwords or incorrect login credentials, with appropriate UI feedback.
+
+- **CI/CD Pipeline:**
+  - **Automated Testing:** Playwright E2E tests run successfully in the GitHub Actions workflow.
+  - **Docker Hub Deployment:** Docker image is built and pushed to Docker Hub automatically upon passing all tests.
 
 ---
+
 **Total: 100 Points**
 ---
 
 ## **Reflect**
 
-**Title:** Module 12 Reflection  
+**Title:** Module 13 Reflection  
 **Grading Type:** Points  
+**Instructions (300–500 words)**:
 
-**Instructions (600–700 words)**:
+1. **Front-End Integration**: How did adding a JWT-based login/registration flow (with client-side validation) deepen your full-stack perspective?  
+2. **DevOps & Testing**: Discuss the role of Playwright E2E tests in verifying login/registration flows, especially for both valid/invalid scenarios.  
+3. **Security & Best Practices**: Which client-side checks (password length/email format) and JWT token storage strategies did you employ, and how do these complement server-side security?
 
-1. **RESTful Endpoints (CLO 11)**: How did implementing user login/registration and calculation routes integrate with your existing models?  
-2. **Testing & CI (CLO 3 & 4)**: Discuss how integration testing with `pytest` and Docker ensures your endpoints remain reliable.  
-3. **DB Integration (CLO 12 & 13)**: Reflect on how your Pydantic schemas and database logic from Modules 10–11 translated into route-level functionality.  
-4. **Security & Best Practices (CLO 14)**: Note any security measures (e.g., verifying user ownership, hashing checks) that protect these endpoints.
+4. **Challenges & Solutions**: Summarize any difficulties (JWT generation/verification, storing tokens, Docker environment for E2E) and how you overcame them.
 
 ---
 
 ## **Quiz**
 
-**Title:** User & Calculation Routes Quiz  
+**Title:** JWT Login & Registration, Front-End Validation, Playwright E2E Quiz  
 **Grading Type:** Points  
 
 ### **Instructions:**
 
 1. **Complete the Quiz on Canvas**, covering:
 
-   - Designing user registration/login routes.  
-   - BREAD endpoints for the calculation model.  
-   - Manual testing with `/docs`, integration testing with a DB.  
-   - Docker-based CI workflow.
+   - Minimal JWT flow in FastAPI (login/register).  
+   - Client-side validation for basic input fields.  
+   - Positive/negative test scenarios with Playwright.  
+   - Docker-based CI integration for E2E tests.
 
 2. **Question Types:**  
-   - **Multiple-Choice:** Identify correct route definitions or best practices for data validation.  
-   - **Short Answer:** Summarize how you handle user auth or a failing calculation test scenario.
+   - **Multiple-Choice**: Identify correct/incorrect approaches to JWT usage or front-end validations.  
+   - **Short Answer**: Summarize how to handle a short password case or invalid login credentials in E2E.
 
 ---
 
 ## **Tips for Success**
 
-1. **Keep Routes Focused**: Stick to user auth endpoints + BREAD for calculations. No front-end complexity yet.  
-2. **Test Thoroughly**: Combine manual checks via OpenAPI with automated integration tests to guarantee correctness.  
-3. **Security**: If you attach calculations to specific users, ensure you only allow the owner to modify them.  
-4. **CI/CD**: Continue the same pipeline approach—your container should now serve tested endpoints.  
-5. **Document**: This code forms the core back-end for your final project; maintain clarity for future expansions.
+1. **Focus on Simplicity**: A single JWT with minimal payload can suffice. Avoid overcomplicated token refresh or advanced flows for this module.  
+2. **Validate on Both Ends**: Client-side checks for user convenience, but always rely on server-side Pydantic validations.  
+3. **Thorough E2E**: Cover at least one positive and one negative scenario for both registration and login.  
+4. **Document**: Clarify in your README how to spin up the app, run tests, and interpret E2E results.  
+5. **Security**: If storing the JWT in localStorage or sessionStorage, be aware of potential XSS or token exposure.
 
 ---
 
 ## **Submission Deadline**
 
-Provide the following by **[Insert Deadline Here]**:
+Please provide by **[Insert Deadline Here]**:
 
-1. **GitHub Repo Link**: With user & calculation routes, tests, and updated CI config.  
-2. **Module 12 Reflection** (600–700 words).  
-3. **README** showing Docker Hub link and test instructions (manual + pytest).
+1. **GitHub Repo Link**: Containing your updated front-end code (JWT auth calls + client validations) and E2E tests.  
+2. **Module 13 Reflection** (300–500 words).  
+3. **README**: Summarize front-end usage, E2E test steps, and Docker Hub link.
 
-Late submissions may face course policy penalties.
+Late submissions may be subject to course policy penalties.
 
 ---
 
-**Excellent Work!** You now have a functional **back-end** with **user login/registration** and fully tested **calculation routes**—ready for a front-end interface in Module 13. By ensuring each endpoint is well-tested and secure, you lay the foundation for a truly production-ready web application.
+**Great Work!** By implementing **JWT-based login/registration**, **client-side validation**, and **Playwright** E2E tests, you deliver a secure, tested authentication flow. In **Module 14**, you’ll expand your front-end to handle the full BREAD calculations, completing your final project’s functionality.
