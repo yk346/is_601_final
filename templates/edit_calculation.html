@@ -88,7 +88,7 @@
         <!-- Left Column -->
         <div class="space-y-5">
           <!-- Type (read-only) -->
-          <div>
+          <!-- <div>
             <label for="calcType" class="block text-sm font-medium text-gray-700 mb-1">Operation Type</label>
             <div class="relative">
               <input 
@@ -111,7 +111,40 @@
               </svg>
               Operation type cannot be changed once created.
             </p>
+          </div> -->
+
+        <!-- Type (dropdown) -->
+          <div>
+            <label for="calcType" class="block text-sm font-medium text-gray-700 mb-1">Operation Type</label>
+            <div class="relative">
+              <select 
+                id="calcType" 
+                name="type" 
+                class="block w-full rounded-md border-gray-300 shadow-sm 
+                      focus:border-blue-500 focus:ring-blue-500 py-2 pl-10"
+                required
+              >
+                <option value="">Select an operation</option>
+                <option value="addition" {% if selected_type == 'addition' %}selected{% endif %}>Addition</option>
+                <option value="subtraction" {% if selected_type == 'subtraction' %}selected{% endif %}>Subtraction</option>
+                <option value="multiplication" {% if selected_type == 'multiplication' %}selected{% endif %}>Multiplication</option>
+                <option value="division" {% if selected_type == 'division' %}selected{% endif %}>Division</option>
+              </select>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-1 flex items-center">
+              <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Please select the operation type.
+            </p>
           </div>
+
+
 
           <!-- Inputs -->
           <div>
@@ -414,6 +447,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Add input handler to update preview on typing
   calcInputsInput.addEventListener('input', updatePreview);
+  calcTypeInput.addEventListener('change', updatePreview);
+
 
   // 2) Submit the edited calculation
   editForm.addEventListener('submit', async (e) => {
@@ -475,7 +510,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ inputs: newInputs })
+        body: JSON.stringify({ 
+          inputs: newInputs, 
+          type: calcTypeInput.value // <-- This sends the updated type to backend
+        })
       });
 
       if (!response.ok) {

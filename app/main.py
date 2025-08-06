@@ -144,22 +144,34 @@ def view_calculation_page(request: Request, calc_id: str):
     """
     return templates.TemplateResponse("view_calculation.html", {"request": request, "calc_id": calc_id})
 
-@app.get("/dashboard/edit/{calc_id}", response_class=HTMLResponse, tags=["web"])
-def edit_calculation_page(request: Request, calc_id: str):
-    """
-    Page for editing a calculation (Update).
+# @app.get("/dashboard/edit/{calc_id}", response_class=HTMLResponse, tags=["web"])
+# def edit_calculation_page(request: Request, calc_id: str):
+#     """
+#     Page for editing a calculation (Update).
     
-    Part of the BREAD (Browse, Read, Edit, Add, Delete) pattern:
-    - This is the Edit page
+#     Part of the BREAD (Browse, Read, Edit, Add, Delete) pattern:
+#     - This is the Edit page
     
-    Args:
-        request: The FastAPI request object (required by Jinja2)
-        calc_id: UUID of the calculation to edit
+#     Args:
+#         request: The FastAPI request object (required by Jinja2)
+#         calc_id: UUID of the calculation to edit
         
-    Returns:
-        HTMLResponse: Rendered template with calculation ID passed to frontend
-    """
-    return templates.TemplateResponse("edit_calculation.html", {"request": request, "calc_id": calc_id})
+#     Returns:
+#         HTMLResponse: Rendered template with calculation ID passed to frontend
+#     """
+#     return templates.TemplateResponse("edit_calculation.html", {"request": request, "calc_id": calc_id})
+
+@app.get("/dashboard/edit/{calc_id}", response_class=HTMLResponse, tags=["web"])
+def edit_calculation_page(request: Request, calc_id: str, db: Session = Depends(get_db)):
+    calculation = db.query(Calculation).filter(Calculation.id == calc_id).first()
+    if not calculation:
+        raise HTTPException(status_code=404, detail="Calculation not found")
+
+    return templates.TemplateResponse("edit_calculation.html", {
+        "request": request,
+        "calc_id": calc_id,
+        "selected_type": calculation.type  # Pass operation type to template
+    })
 
 
 # ------------------------------------------------------------------------------
@@ -335,6 +347,7 @@ def get_calculation(
 
 
 # Edit / Update a Calculation
+"""
 @app.put("/calculations/{calc_id}", response_model=CalculationResponse, tags=["calculations"])
 def update_calculation(
     calc_id: str,
@@ -342,9 +355,9 @@ def update_calculation(
     current_user = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Update the inputs (and thus the result) of a specific calculation.
-    """
+    
+    #Update the inputs (and thus the result) of a specific calculation.
+    
     try:
         calc_uuid = UUID(calc_id)
     except ValueError:
@@ -365,7 +378,54 @@ def update_calculation(
     db.commit()
     db.refresh(calculation)
     return calculation
+"""
+@app.put("/calculations/{calc_id}", response_model=CalculationResponse, tags=["calculations"])
+def update_calculation(
+    calc_id: str,
+    calculation_update: CalculationUpdate,
+    current_user = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        calc_uuid = UUID(calc_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid calculation id format.")
 
+    # Fetch calculation
+    calculation = db.query(Calculation).filter(
+        Calculation.id == calc_uuid,
+        Calculation.user_id == current_user.id
+    ).first()
+
+    if not calculation:
+        raise HTTPException(status_code=404, detail="Calculation not found.")
+
+    # Update fields
+    if calculation_update.type is not None:
+        calculation.type = calculation_update.type
+
+    if calculation_update.inputs is not None:
+        calculation.inputs = calculation_update.inputs
+
+    db.flush()  # Write changes to DB but don't commit yet.
+
+    # Re-fetch to ensure polymorphic identity is refreshed
+    db.expunge(calculation)
+    calculation = db.query(Calculation).get(calc_uuid)
+
+    if not calculation:
+        raise HTTPException(status_code=404, detail="Calculation not found after refresh.")
+
+    try:
+        calculation.result = calculation.get_result()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Calculation failed: {str(e)}")
+
+    calculation.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(calculation)
+
+    return calculation
 
 # Delete a Calculation
 @app.delete("/calculations/{calc_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["calculations"])

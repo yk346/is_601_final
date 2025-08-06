@@ -180,6 +180,11 @@ class CalculationUpdate(BaseModel):
     Note that all fields are optional (so clients can send partial updates),
     but if inputs are provided, they must pass validation.
     """
+    type: Optional[str] = Field(
+        None,
+        description="Updated operation type for the calculation",
+        example="multiplication"
+    )
     inputs: Optional[List[float]] = Field(
         None,  # None means this field is optional
         description="Updated list of numeric inputs for the calculation",
@@ -205,13 +210,18 @@ class CalculationUpdate(BaseModel):
         Raises:
             ValueError: If validation fails
         """
+        allowed_types = {"addition", "subtraction", "multiplication", "division"}
+
+        if self.type is not None and self.type not in allowed_types:
+            raise ValueError(f"Invalid type '{self.type}'. Must be one of: {', '.join(allowed_types)}")
+        
         if self.inputs is not None and len(self.inputs) < 2:
             raise ValueError("At least two numbers are required for calculation")
         return self
 
     model_config = ConfigDict(
         from_attributes=True,
-        json_schema_extra={"example": {"inputs": [42, 7]}}
+        json_schema_extra={"example": {"type": "multiplication","inputs": [42, 7]}}
     )
 
 class CalculationResponse(CalculationBase):
