@@ -1,3 +1,9 @@
+DockerHub repo:
+https://hub.docker.com/repository/docker/yk346/601_module14/general
+
+BREAD functionality
+added the calculation update on change of the calculation type from the dropdown list
+
 # 📦 Project Setup
 
 ---
