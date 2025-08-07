@@ -19,14 +19,7 @@ what's new:
 added the calculation update function when the calculation type is changed in the dropdown list
 
 2) Added front end testing (test_calculator_e2e.py):
-| Feature                       | Test Name                                      | Notes                                       |
-| ----------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| ✔ User registration & login   | `test_register_and_login`                      | Good use of dynamic users via UUID          |
-| ✔ Unauthorized access         | `test_unauthorized_access_redirect`            | Verifies redirect + login field visibility  |
-| ✔ Invalid backend input       | `test_invalid_calc_type_backend_error`         | Checks rejected invalid `calcType`          |
-| ✔ Valid calculation creation  | `test_create_addition_calculation`             | Asserts result appears in history           |
-| ✔ Invalid input (non-numeric) | `test_invalid_input_handling`                  | Asserts error message appears               |
-| ✔ Deletion (cancel + confirm) | `test_calculation_deletion_confirm_and_cancel` | Covers both dismiss and accept dialog flows |
+![alt text](image-4.png)
 
 
 # 📦 Project Setup
