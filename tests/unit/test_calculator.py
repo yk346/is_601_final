@@ -244,7 +244,7 @@ def test_exponentiation_right_associative():
 
 
 def test_exponentiation_invalid_input_type():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="must be numbers"):
         exponentiate("2", "3")
 
 def test_exponentiation_too_few_inputs():

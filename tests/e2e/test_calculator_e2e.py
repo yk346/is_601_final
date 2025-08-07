@@ -158,3 +158,28 @@ def test_calculation_deletion_confirm_and_cancel(page: Page, create_and_login_us
 
     # Confirm row is gone
     expect(page.locator("tr", has_text="10")).not_to_be_visible(timeout=3000)
+
+
+@pytest.mark.e2e
+def test_right_associative_exponentiation(page: Page, create_and_login_user):
+    # Confirm we're on the dashboard
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+
+    # Open new calculation form
+    page.click("text=New Calculation")
+
+    # Select exponentiation operation
+    page.select_option("#calcType", "exponentiation")
+
+    # Fill in right-associative inputs: 2 ** (2 ** 3) = 256
+    page.fill("#calcInputs", "2, 2, 3")
+
+    # Click calculate
+    page.click("button:has-text('Calculate')")
+
+    # Get the first row in the result table
+    row = page.locator("table tbody tr").first
+    result_cell = row.locator("td").nth(2)  # 3rd column (0-based)
+
+    # Verify the result is 256
+    expect(result_cell).to_have_text("256")

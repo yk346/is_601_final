@@ -122,9 +122,14 @@ def divide(a: Number, b: Number) -> float:
 def exponentiate(*args: float) -> float:
     if len(args) < 2:
         raise ValueError("At least two arguments are required for exponentiation.")
-    
+
+    for arg in args:
+        if not isinstance(arg, (int, float)):
+            raise ValueError("All inputs must be numbers.")
+
     result = args[-1]
     for base in reversed(args[:-1]):
         result = base ** result
     return result
+
 
