@@ -1,10 +1,24 @@
 DockerHub repo:
 https://hub.docker.com/repository/docker/yk346/601_module14/general
 
-BREAD functionality
-added the calculation update on change of the calculation type from the dropdown list
+Frontend link
+http://localhost:8000/dashboard
 
-Added front end testing (test_calculator_e2e.py):
+First time open you will be prompted to a login page.
+Click on "Register Now" to create new user
+![alt text](image.png)
+Fill in the required fields and click "Create Account"
+![alt text](image-2.png)
+
+Use login and password to access the calculator.
+Then use accessed calculator webpage to perform calculations.
+![alt text](image-3.png)
+
+what's new:
+1) BREAD functionality
+added the calculation update function when the calculation type is changed in the dropdown list
+
+2) Added front end testing (test_calculator_e2e.py):
 | Feature                       | Test Name                                      | Notes                                       |
 | ----------------------------- | ---------------------------------------------- | ------------------------------------------- |
 | ✔ User registration & login   | `test_register_and_login`                      | Good use of dynamic users via UUID          |
