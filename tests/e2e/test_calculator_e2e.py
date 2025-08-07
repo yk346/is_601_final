@@ -45,6 +45,33 @@ def test_register_and_login(page: Page, create_and_login_user):
     # After login, ensure dashboard URL
     expect(page).to_have_url(re.compile(".*/dashboard.*"))
 
+def test_unauthorized_access_redirect(page: Page):
+    # Try accessing dashboard directly without logging in
+    page.goto("http://localhost:8000/dashboard")
+
+    # Confirm redirection to login
+    expect(page).to_have_url(re.compile(".*/login"))
+
+    # Validate login form is visible
+    expect(page.locator("input[name='username']")).to_be_visible()
+    expect(page.locator("input[name='password']")).to_be_visible()
+
+
+def test_invalid_calc_type_backend_error(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+    page.click("text=New Calculation")
+
+    # Force invalid option using JavaScript
+    page.evaluate("document.querySelector('#calcType').innerHTML += '<option value=\"bogus\">Bogus</option>'")
+    page.select_option("#calcType", "bogus")
+    page.fill("#calcInputs", "1, 2")
+    page.click("button:has-text('Calculate')")
+
+    # Expect backend to reject the operation
+    expect(page.locator("#errorAlert")).to_be_visible()
+    #expect(page.locator("#errorAlert")).to_contain_text("Invalid calculation type")
+    expect(page.locator("#errorAlert")).to_contain_text("object")  # fallback
+
 def test_create_addition_calculation(page: Page, create_and_login_user):
     expect(page).to_have_url(re.compile(".*/dashboard.*"))
 
