@@ -1,7 +1,7 @@
 services:
   web:
     build: .
-    container_name: fastapi_calculator6
+    container_name: fastapi_calculator_final
     ports:
       - "8000:8000"
     volumes:

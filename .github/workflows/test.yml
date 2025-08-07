@@ -120,8 +120,8 @@ jobs:
         with:
           push: true
           tags: |
-            yk346/601_module14:latest
-            yk346/601_module14:${{ github.sha }}
+            yk346/601_final:latest
+            yk346/601_final:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=yk346/601_module14:cache
+          cache-from: type=registry,ref=yk346/601_final:cache
           cache-to: type=inline,mode=max
