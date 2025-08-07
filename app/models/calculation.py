@@ -178,6 +178,7 @@ class AbstractCalculation:
             'subtraction': Subtraction,
             'multiplication': Multiplication,
             'division': Division,
+            'exponentiation': Exponentiation
         }
         calculation_class = calculation_classes.get(calculation_type.lower())
         if not calculation_class:
@@ -354,3 +355,38 @@ class Division(Calculation):
                 raise ValueError("Cannot divide by zero.")
             result /= value
         return result
+
+class Exponentiation(Calculation):
+    """
+    Exponentiation calculation subclass (right-associative).
+
+    Evaluates chained exponentiation from right to left.
+    Examples:
+        [2, 3]       → 2 ** 3 = 8
+        [2, 3, 2]    → 2 ** (3 ** 2) = 2 ** 9 = 512
+        [5, 2, 2, 1] → 5 ** (2 ** (2 ** 1)) = 5 ** 4 = 625
+
+    Raises:
+        ValueError: If inputs are invalid or contain fewer than two numbers.
+    """
+    __mapper_args__ = {"polymorphic_identity": "exponentiation"}
+
+    def get_result(self) -> float:
+        """
+        Calculate the result of right-associative exponentiation.
+
+        Returns:
+            float: Result of chained exponentiation
+        """
+        if not isinstance(self.inputs, list):
+            raise ValueError("Inputs must be a list of numbers.")
+        if len(self.inputs) < 2:
+            raise ValueError("Exponentiation requires at least two inputs.")
+
+        # Start from the right-most exponent
+        result = self.inputs[-1]
+        for base in reversed(self.inputs[:-1]):
+            result = base ** result
+
+        return result
+

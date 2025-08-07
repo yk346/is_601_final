@@ -7,6 +7,7 @@ from app.models.calculation import (
     Subtraction,
     Multiplication,
     Division,
+    Exponentiation,
 )
 
 # Helper function to create a dummy user_id for testing.
@@ -150,3 +151,52 @@ def test_invalid_inputs_for_division():
     division = Division(user_id=dummy_user_id(), inputs=[10])
     with pytest.raises(ValueError, match="Inputs must be a list with at least two numbers."):
         division.get_result()
+
+def test_exponentiation_right_associative():
+    """
+    Test that Exponentiation.get_result computes right-associative exponentiation.
+    Example: 2 ** (3 ** 2) = 2 ** 9 = 512
+    """
+    inputs = [2, 3, 2]
+    exponentiation = Exponentiation(user_id=dummy_user_id(), inputs=inputs)
+    result = exponentiation.get_result()
+    assert result == 512, f"Expected 512, got {result}"
+
+def test_exponentiation_with_two_numbers():
+    """
+    Test that Exponentiation.get_result works for two inputs.
+    Example: 5 ** 3 = 125
+    """
+    inputs = [5, 3]
+    exponentiation = Exponentiation(user_id=dummy_user_id(), inputs=inputs)
+    result = exponentiation.get_result()
+    assert result == 125, f"Expected 125, got {result}"
+
+def test_exponentiation_factory():
+    """
+    Test the Calculation.create factory method for exponentiation.
+    """
+    inputs = [2, 2, 2]
+    calc = Calculation.create(
+        calculation_type='exponentiation',
+        user_id=dummy_user_id(),
+        inputs=inputs,
+    )
+    assert isinstance(calc, Exponentiation), "Factory did not return an Exponentiation instance."
+    assert calc.get_result() == 16, "Incorrect exponentiation result (expected 2 ** (2 ** 2) = 16)"
+
+def test_invalid_inputs_for_exponentiation():
+    """
+    Test that non-list input raises a ValueError.
+    """
+    exponentiation = Exponentiation(user_id=dummy_user_id(), inputs="not-a-list")
+    with pytest.raises(ValueError, match="Inputs must be a list of numbers."):
+        exponentiation.get_result()
+
+def test_exponentiation_with_empty_list():
+    """
+    Test that empty input list raises a ValueError.
+    """
+    exponentiation = Exponentiation(user_id=dummy_user_id(), inputs=[])
+    with pytest.raises(ValueError, match="Exponentiation requires at least two inputs."):
+        exponentiation.get_result()

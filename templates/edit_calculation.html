@@ -129,6 +129,7 @@
                 <option value="subtraction" {% if selected_type == 'subtraction' %}selected{% endif %}>Subtraction</option>
                 <option value="multiplication" {% if selected_type == 'multiplication' %}selected{% endif %}>Multiplication</option>
                 <option value="division" {% if selected_type == 'division' %}selected{% endif %}>Division</option>
+                <option value="exponentiation" {% if selected_type == 'exponentiation' %}selected{% endif %}>Exponentiation</option>
               </select>
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +141,7 @@
               <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              Please select the operation type.
+              Please select the operation type. (e.g., exponentiation raises A to the power of B).
             </p>
           </div>
 
@@ -167,7 +168,7 @@
               </div>
             </div>
             <p id="inputHelp" class="text-sm text-gray-500 mt-1">
-              Enter two or more numbers separated by commas.
+              Enter two or more numbers separated by commas. For exponentiation function the right associative exponention is used e.g. [2, 3, 2] = 2 ** (3 ** 2) = 2 ** 9 = 512
             </p>
           </div>
         </div>
@@ -308,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!inputs || inputs.length < 2) {
       return null;
     }
-    
+
     let result;
     switch (type) {
       case 'addition':
@@ -321,23 +322,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         result = inputs.reduce((a, b) => a * b, 1);
         break;
       case 'division':
-        // Avoid division by zero
         if (inputs.some((value, index) => index > 0 && value === 0)) {
           return 'Cannot divide by zero';
         }
         result = inputs.reduce((a, b, i) => i === 0 ? a : a / b, inputs[0]);
         break;
+      case 'exponentiation':
+        // Right-associative exponentiation: reduceRight
+        result = inputs.reduceRight((a, b) => Math.pow(b, a));
+        break;
       default:
         return 'Unknown operation';
     }
-    
-    // Format the result nicely
-    return typeof result === 'number' ? 
-      (Math.abs(result) < 0.0001 && result !== 0) ? 
-        result.toExponential(4) : 
-        Math.round(result * 10000) / 10000 : 
-      result;
+
+    return typeof result === 'number'
+      ? (Math.abs(result) < 0.0001 && result !== 0)
+        ? result.toExponential(4)
+        : Math.round(result * 10000) / 10000
+      : result;
   }
+
   
   // Function to update the preview
   function updatePreview() {
@@ -362,6 +366,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         break;
       case 'division':
         operator = '÷';
+        break;
+      case 'exponentiation':
+        operator = '^';
         break;
       default:
         operator = '?';

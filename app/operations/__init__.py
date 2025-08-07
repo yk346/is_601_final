@@ -118,3 +118,13 @@ def divide(a: Number, b: Number) -> float:
     # Perform division of a by b and return the result as a float
     result = a / b
     return result
+
+def exponentiate(*args: float) -> float:
+    if len(args) < 2:
+        raise ValueError("At least two arguments are required for exponentiation.")
+    
+    result = args[-1]
+    for base in reversed(args[:-1]):
+        result = base ** result
+    return result
+
