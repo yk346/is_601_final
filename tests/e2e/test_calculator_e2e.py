@@ -1,55 +1,4 @@
 # # test_calculator_e2e
-# import pytest
-# from playwright.sync_api import Page, expect
-
-# @pytest.fixture(scope="session")
-# def base_url():
-#     return "http://localhost:8000"
-
-# def test_register_and_login(page: Page, base_url: str):
-#     username = f"e2euser"
-#     password = "TestPass123!"
-
-#     page.goto(f"{base_url}/login")
-#     page.click("text=Register")
-
-#     page.fill("#first_name", "Test")
-#     page.fill("#last_name", "User")
-#     page.fill("#email", f"{username}@example.com")
-#     page.fill("#username", username)
-#     page.fill("#password", password)
-#     page.fill("#confirm_password", password)
-
-#     page.click("button:has-text('Create Account')")
-#     page.wait_for_url("**/login")
-
-#     page.fill("#username", username)
-#     page.fill("#password", password)
-#     page.click("button:has-text('Sign in')")
-
-#     page.wait_for_url("**/dashboard")
-#     assert "/dashboard" in page.url
-
-
-# @pytest.fixture(scope="function")
-# def login(page: Page, base_url: str):
-#     # You need an existing user for this test
-#     username = f"e2euser"  # Must be in DB
-#     password = "SecurePass123!"
-
-#     page.goto(f"{base_url}/login")
-#     page.fill("#username", username)
-#     page.fill("#password", password)
-#     page.click("button:has-text('Sign in')")
-#     page.wait_for_url("**/dashboard")
-#     expect(page).to_have_url(lambda url: "/dashboard" in url)
-    
-# def test_create_addition_calculation(page: Page, login):
-#     page.click("text=New Calculation")
-#     page.select_option("#calcType", "addition")
-#     page.fill("#calcInputs", "5, 10, 15")
-#     page.click("button:has-text('Calculate')")
-#     expect(page.locator("text=Result")).to_contain_text("30")
 
 import pytest
 import re
@@ -111,3 +60,74 @@ def test_create_addition_calculation(page: Page, create_and_login_user):
 
     expect(result_cell).to_have_text("17")
 
+def test_invalid_input_handling(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "addition")
+    page.fill("#calcInputs", "abc, 5")
+    page.click("button:has-text('Calculate')")
+
+    # Wait for error alert to appear (not immediately fail if it's briefly visible)
+    error = page.locator("#errorAlert")
+
+    # Wait until it's attached to DOM and becomes visible
+    error.wait_for(state="visible", timeout=3000)
+
+    # Optionally assert content if needed
+    expect(error).to_contain_text("Please enter at least two valid numbers")
+
+def test_calculation_deletion_confirm_and_cancel(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+
+    # Create a new calculation
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "addition")
+    page.fill("#calcInputs", "3, 7")
+    page.click("button:has-text('Calculate')")
+
+    # Wait for success
+    expect(page.locator("#successAlert")).to_be_visible()
+
+    # Back on dashboard
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+
+    # Find the row with result "10"
+    row = page.locator("tr", has_text="10")
+    expect(row).to_be_visible()
+
+    # ----------------------------
+    # ❌ First test: Click "Cancel"
+    # ----------------------------
+
+    def cancel_dialog(dialog):
+        assert dialog.type == "confirm"
+        assert "Are you sure you want to delete this calculation?" in dialog.message
+        dialog.dismiss()  # Clicks "Cancel"
+
+    page.once("dialog", cancel_dialog)
+
+    # Click Delete
+    row.locator("button:has-text('Delete')").click()
+
+    # Make sure the row is still there
+    expect(row).to_be_visible()
+
+    # ----------------------------
+    # ✅ Second test: Click "OK"
+    # ----------------------------
+
+    def accept_dialog(dialog):
+        assert dialog.type == "confirm"
+        assert "Are you sure you want to delete this calculation?" in dialog.message
+        dialog.accept()  # Clicks "OK"
+
+    page.once("dialog", accept_dialog)
+
+    # Click Delete again
+    row.locator("button:has-text('Delete')").click()
+
+    # Expect success message
+    expect(page.locator("#successAlert")).to_be_visible(timeout=3000)
+
+    # Confirm row is gone
+    expect(page.locator("tr", has_text="10")).not_to_be_visible(timeout=3000)
