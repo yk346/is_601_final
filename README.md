@@ -12,13 +12,13 @@ Fill in the required fields and click "Create Account"
 
 Use login and password to access the calculator.
 Then use accessed calculator webpage to perform calculations.
-![alt text](image-3.png)
+![alt text](image-6.png)
 
 what's new:
 1) Added a right-associative exponentiation function 
 
 2) Added front end testing (test_calculator_e2e.py):
-![alt text](image-4.png)
+![alt text](image-5.png)
 
 
 # 📦 Project Setup
