@@ -458,8 +458,24 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         
+        // const errorData = await response.json();
+        // throw new Error(errorData.detail || 'Failed to create calculation');
+
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to create calculation');
+        let errorMessage = 'Failed to create calculation';
+
+        if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        } else if (Array.isArray(errorData.detail)) {
+          // Handles FastAPI validation errors from Pydantic
+          errorMessage = errorData.detail.map(d => d.msg).join('; ');
+        } else if (typeof errorData.detail === 'object') {
+          errorMessage = Object.values(errorData.detail).join('; ');
+        }
+
+throw new Error(errorMessage);
+
+
       }
       
       // Get the created calculation data
