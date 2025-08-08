@@ -15,7 +15,7 @@ Then use accessed calculator webpage to perform calculations.
 ![alt text](image-6.png)
 
 what's new:
-1) Added a right-associative exponentiation function 
+1) Added a right-associative exponentiation and left-associtive modulus functions 
 
 2) Added front end testing (test_calculator_e2e.py):
 ![alt text](image-5.png)
