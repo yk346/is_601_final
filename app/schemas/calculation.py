@@ -129,11 +129,21 @@ class CalculationBase(BaseModel):
         """
         if len(self.inputs) < 2:
             raise ValueError("At least two numbers are required for calculation")
+        
         if self.type == CalculationType.DIVISION:
             # Prevent division by zero (skip the first value as numerator)
             if any(x == 0 for x in self.inputs[1:]):
                 raise ValueError("Cannot divide by zero")
+        
+        if self.type == CalculationType.EXPONENTIATION:
+        # Check for 0 base with zero or negative exponent
+            for i in range(len(self.inputs) - 1):
+                base = self.inputs[i]
+                exponent = self.inputs[i + 1]
+                if base == 0 and exponent <= 0:
+                    raise ValueError("Exponentiation with base 0 and zero or negative exponent is invalid")
         return self
+
 
     model_config = ConfigDict(
         # Allow conversion from SQLAlchemy models to Pydantic models

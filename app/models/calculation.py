@@ -378,6 +378,10 @@ class Exponentiation(Calculation):
 
         Returns:
             float: Result of chained exponentiation
+
+        Raises:
+            ValueError: If inputs are invalid or contain fewer than two numbers,
+                        or if attempting to raise 0 to a negative power.
         """
         if not isinstance(self.inputs, list):
             raise ValueError("Inputs must be a list of numbers.")
@@ -387,9 +391,12 @@ class Exponentiation(Calculation):
         # Start from the right-most exponent
         result = self.inputs[-1]
         for base in reversed(self.inputs[:-1]):
+            if base == 0 and result < 0:
+                raise ValueError("Cannot raise 0 to a negative exponent.")
             result = base ** result
 
         return result
+
 
 class Modulo(Calculation):
     """

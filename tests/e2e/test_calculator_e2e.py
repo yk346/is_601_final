@@ -184,6 +184,87 @@ def test_right_associative_exponentiation(page: Page, create_and_login_user):
     # Verify the result is 256
     expect(result_cell).to_have_text("256")
 
+@pytest.mark.e2e
+def test_exponentiation_two_numbers(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "exponentiation")
+    page.fill("#calcInputs", "2, 3")  # 2^3 = 8
+    page.click("button:has-text('Calculate')")
+    result = page.locator("table tbody tr").first.locator("td").nth(2)
+    expect(result).to_have_text("8")
+
+
+@pytest.mark.e2e
+def test_exponentiation_zero_power(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "exponentiation")
+    page.fill("#calcInputs", "5, 0")  # 5^0 = 1
+    page.click("button:has-text('Calculate')")
+    result = page.locator("table tbody tr").first.locator("td").nth(2)
+    expect(result).to_have_text("1")
+
+
+@pytest.mark.e2e
+def test_exponentiation_negative_exponent(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "exponentiation")
+    page.fill("#calcInputs", "2, -2")  # 2^-2 = 0.25
+    page.click("button:has-text('Calculate')")
+    result = page.locator("table tbody tr").first.locator("td").nth(2)
+    expect(result).to_have_text("0.25")
+
+
+@pytest.mark.e2e
+def test_exponentiation_with_floats(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(r".*/dashboard.*"))
+
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "exponentiation")
+    page.fill("#calcInputs", "9, 0.5")  # sqrt(9) = 3.0
+    page.click("button:has-text('Calculate')")
+
+    result_cell = page.locator("table tbody tr").first.locator("td").nth(2)
+    result_cell.wait_for(timeout=3000)
+
+    actual_text = result_cell.inner_text()
+    assert actual_text in ["3", "3.0"], f"Unexpected result: {actual_text}"
+
+#Negative Cases
+@pytest.mark.e2e
+def test_exponentiation_non_numeric_input(page: Page, create_and_login_user):
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "exponentiation")
+    page.fill("#calcInputs", "2, foo")
+    page.click("button:has-text('Calculate')")
+    error = page.locator("#errorAlert")
+    error.wait_for(state="visible")
+    expect(error).to_contain_text("Please enter at least two valid numbers")
+
+
+@pytest.mark.e2e
+def test_exponentiation_empty_input(page: Page, create_and_login_user):
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "exponentiation")
+    page.fill("#calcInputs", "")
+    page.click("button:has-text('Calculate')")
+    error = page.locator("#errorAlert")
+    error.wait_for(state="visible")
+    expect(error).to_contain_text("Please enter at least two valid numbers")
+
+
+@pytest.mark.e2e
+def test_exponentiation_single_input(page: Page, create_and_login_user):
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "exponentiation")
+    page.fill("#calcInputs", "2")
+    page.click("button:has-text('Calculate')")
+    error = page.locator("#errorAlert")
+    error.wait_for(state="visible")
+    expect(error).to_contain_text("Please enter at least two valid numbers")
+
 
 @pytest.mark.e2e
 def test_modulo_operation_multinumber_input(page: Page, create_and_login_user):
@@ -208,4 +289,50 @@ def test_modulo_operation_multinumber_input(page: Page, create_and_login_user):
 
     # Validate final result
     expect(result_cell).to_have_text("3")
-   
+
+@pytest.mark.e2e
+def test_modulo_by_zero_error(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+
+    # Trigger new calculation flow
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "modulo")
+    page.fill("#calcInputs", "5, 0")  # Invalid input
+    page.click("button:has-text('Calculate')")
+
+    # Wait for error alert
+    error = page.locator("#errorAlert")
+    error.wait_for(state="visible", timeout=3000)
+
+    # Assertion (match backend message exactly)
+    expect(error).to_contain_text("Cannot perform modulo by zero")
+
+@pytest.mark.e2e
+def test_modulo_with_single_input_error(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "modulo")
+    page.fill("#calcInputs", "42")  # Only one number
+    page.click("button:has-text('Calculate')")
+
+    error = page.locator("#errorAlert")
+    error.wait_for(state="visible", timeout=3000)
+
+    # Just use a partial string match
+    expect(error).to_contain_text("enter at least two")
+
+
+@pytest.mark.e2e
+def test_modulo_with_invalid_input(page: Page, create_and_login_user):
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+
+    page.click("text=New Calculation")
+    page.select_option("#calcType", "modulo")
+    page.fill("#calcInputs", "abc, 5")
+    page.click("button:has-text('Calculate')")
+
+    error = page.locator("#errorAlert")
+    error.wait_for(state="visible", timeout=3000)
+
+    expect(error).to_contain_text("Please enter at least two valid numbers")
