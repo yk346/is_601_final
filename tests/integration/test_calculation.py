@@ -8,6 +8,7 @@ from app.models.calculation import (
     Multiplication,
     Division,
     Exponentiation,
+    Modulo,
 )
 
 # Helper function to create a dummy user_id for testing.
@@ -200,3 +201,62 @@ def test_exponentiation_with_empty_list():
     exponentiation = Exponentiation(user_id=dummy_user_id(), inputs=[])
     with pytest.raises(ValueError, match="Exponentiation requires at least two inputs."):
         exponentiation.get_result()
+
+def test_modulo_get_result():
+    """
+    Test that Modulo.get_result returns the correct remainder.
+    """
+    inputs = [10, 3, 2]
+    modulo = Modulo(user_id=dummy_user_id(), inputs=inputs)
+    # Expected: ((10 % 3) % 2) = (1 % 2) = 1
+    result = modulo.get_result()
+    assert result == 1, f"Expected 1, got {result}"
+
+def test_modulo_two_inputs():
+    """
+    Test that Modulo.get_result works for two inputs.
+    """
+    inputs = [20, 6]
+    modulo = Modulo(user_id=dummy_user_id(), inputs=inputs)
+    # Expected: 20 % 6 = 2
+    result = modulo.get_result()
+    assert result == 2, f"Expected 2, got {result}"
+
+def test_modulo_by_zero():
+    """
+    Test that Modulo.get_result raises ValueError when dividing by zero.
+    """
+    inputs = [15, 0]
+    modulo = Modulo(user_id=dummy_user_id(), inputs=inputs)
+    with pytest.raises(ValueError, match="Cannot perform modulo by zero."):
+        modulo.get_result()
+
+
+def test_calculation_factory_modulo():
+    """
+    Test the Calculation.create factory method for modulo.
+    """
+    inputs = [10, 3, 2]
+    calc = Calculation.create(
+        calculation_type='modulo',
+        user_id=dummy_user_id(),
+        inputs=inputs,
+    )
+    assert isinstance(calc, Modulo), "Factory did not return a Modulo instance."
+    assert calc.get_result() == 1, "Incorrect modulo result (expected ((10 % 3) % 2) = 1)"
+
+def test_invalid_inputs_for_modulo():
+    """
+    Test that providing fewer than two numbers to Modulo.get_result raises a ValueError.
+    """
+    modulo = Modulo(user_id=dummy_user_id(), inputs=[10])
+    with pytest.raises(ValueError, match="Modulo requires at least two inputs."):
+        modulo.get_result()
+
+def test_modulo_with_empty_input_list():
+    """
+    Test that providing an empty list to Modulo.get_result raises a ValueError.
+    """
+    modulo = Modulo(user_id=dummy_user_id(), inputs=[])
+    with pytest.raises(ValueError, match="Modulo requires at least two inputs."):
+        modulo.get_result()

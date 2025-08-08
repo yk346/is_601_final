@@ -55,6 +55,7 @@
           <option value="multiplication">Multiplication</option>
           <option value="division">Division</option>
           <option value="exponentiation" {% if selected_type == 'exponentiation' %}selected{% endif %}>Exponentiation</option>
+          <option value="modulo">Modulo</option>
 
         </select>
       </div>
@@ -71,6 +72,10 @@
           class="block w-full rounded-md border-gray-300 shadow-sm 
                  focus:border-blue-500 focus:ring-blue-500 py-2"
         />
+        <p id="inputHelp" class="text-sm text-gray-500 mt-1">
+          Enter two or more numbers separated by commas. For exponentiation function the right associative exponention is used e.g. [2, 3, 2] = 2 ** (3 ** 2) = 2 ** 9 = 512.
+          For modulo, left-associative evaluation is used (e.g., [100, 30, 4] = (100 % 30) % 4 = 2).
+        </p>
       </div>
     </div>
     <div class="pt-2">

@@ -1,8 +1,8 @@
 DockerHub repo:
-https://hub.docker.com/repository/docker/yk346/601_module14/general
+https://hub.docker.com/repository/docker/yk346/601_final/general
 
 Frontend link
-http://localhost:8000/dashboard
+http://localhost:8000
 
 First time open you will be prompted to a login page.
 Click on "Register Now" to create new user
@@ -15,8 +15,7 @@ Then use accessed calculator webpage to perform calculations.
 ![alt text](image-3.png)
 
 what's new:
-1) BREAD functionality
-added the calculation update function when the calculation type is changed in the dropdown list
+1) Added a right-associative exponentiation function 
 
 2) Added front end testing (test_calculator_e2e.py):
 ![alt text](image-4.png)

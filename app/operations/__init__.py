@@ -132,4 +132,16 @@ def exponentiate(*args: float) -> float:
         result = base ** result
     return result
 
+def modulo(*args: float) -> float:
+    if len(args) < 2:
+        raise ValueError("At least two arguments are required for modulus.")
+
+    result = args[0]
+    for divisor in args[1:]:
+        if divisor == 0:
+            raise ValueError("Cannot perform modulo by zero.")
+        result %= divisor
+
+    return result
+
 

@@ -183,3 +183,29 @@ def test_right_associative_exponentiation(page: Page, create_and_login_user):
 
     # Verify the result is 256
     expect(result_cell).to_have_text("256")
+
+
+@pytest.mark.e2e
+def test_modulo_operation_multinumber_input(page: Page, create_and_login_user):
+    # Ensure we're on the dashboard
+    expect(page).to_have_url(re.compile(".*/dashboard.*"))
+
+    # Navigate to new calculation
+    page.click("text=New Calculation")
+
+    # Select modulo operation
+    page.select_option("#calcType", "modulo")
+
+    # Example: (100 % 30 % 7) = (100 % 30 = 10, then 10 % 7 = 3)
+    page.fill("#calcInputs", "100, 30, 7")
+
+    # Click calculate
+    page.click("button:has-text('Calculate')")
+
+    # Wait for result
+    row = page.locator("table tbody tr").first
+    result_cell = row.locator("td").nth(2)
+
+    # Validate final result
+    expect(result_cell).to_have_text("3")
+   

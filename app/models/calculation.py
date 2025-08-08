@@ -178,7 +178,8 @@ class AbstractCalculation:
             'subtraction': Subtraction,
             'multiplication': Multiplication,
             'division': Division,
-            'exponentiation': Exponentiation
+            'exponentiation': Exponentiation,
+            'modulo': Modulo,
         }
         calculation_class = calculation_classes.get(calculation_type.lower())
         if not calculation_class:
@@ -390,3 +391,34 @@ class Exponentiation(Calculation):
 
         return result
 
+class Modulo(Calculation):
+    """
+    Modulo calculation subclass.
+
+    Computes the result of applying the modulo operator sequentially.
+    Examples:
+        [10, 3] → 10 % 3 = 1
+        [100, 7, 4] → ((100 % 7) % 4) = 2
+
+    Raises:
+        ValueError: If inputs are invalid or if attempting modulo by zero.
+    """
+    __mapper_args__ = {"polymorphic_identity": "modulo"}
+
+    def get_result(self) -> float:
+        """
+        Calculate the result of applying modulo sequentially from left to right.
+
+        Returns:
+            float: Result of the modulo operation
+        """
+        if not isinstance(self.inputs, list):
+            raise ValueError("Inputs must be a list of numbers.")
+        if len(self.inputs) < 2:
+            raise ValueError("Modulo requires at least two inputs.")
+        result = self.inputs[0]
+        for value in self.inputs[1:]:
+            if value == 0:
+                raise ValueError("Cannot perform modulo by zero.")
+            result %= value
+        return result

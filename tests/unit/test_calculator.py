@@ -2,7 +2,7 @@
 
 import pytest  # Import the pytest framework for writing and running tests
 from typing import Union  # Import Union for type hinting multiple possible types
-from app.operations import add, subtract, multiply, divide, exponentiate  # Import the calculator functions from the operations module
+from app.operations import add, subtract, multiply, divide, exponentiate, modulo  # Import the calculator functions from the operations module
 
 
 # Define a type alias for numbers that can be either int or float
@@ -250,3 +250,14 @@ def test_exponentiation_invalid_input_type():
 def test_exponentiation_too_few_inputs():
     with pytest.raises(ValueError):
         exponentiate(2)
+
+
+def test_modulo_two_numbers():
+    assert modulo(*[10, 3]) == 1  # Unpacks to modulo(10, 3)
+
+def test_modulo_three_numbers():
+    assert modulo(*[100, 30, 4]) == 2  # (100 % 30) % 4 = 10 % 4 = 2
+
+def test_modulo_zero_divisor():
+    with pytest.raises(ValueError):  # Note: should raise ValueError not ZeroDivisionError
+        modulo(*[10, 0])

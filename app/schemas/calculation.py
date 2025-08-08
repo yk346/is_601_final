@@ -36,7 +36,8 @@ class CalculationType(str, Enum):
     SUBTRACTION = "subtraction"
     MULTIPLICATION = "multiplication"
     DIVISION = "division"
-    EXPONENTIATION = "exponentiation"  # <-- Add this line
+    EXPONENTIATION = "exponentiation"
+    MODULO = "modulo" 
 
 class CalculationBase(BaseModel):
     """
@@ -50,7 +51,7 @@ class CalculationBase(BaseModel):
     """
     type: CalculationType = Field(
         ...,  # The ... means this field is required
-        description="Type of calculation (addition, subtraction, multiplication, division, exponentiation)",
+        description="Type of calculation (addition, subtraction, multiplication, division, exponentiation, modulo)",
 
         example="addition"
     )
@@ -143,7 +144,8 @@ class CalculationBase(BaseModel):
             "examples": [
                 {"type": "addition", "inputs": [10.5, 3, 2]},
                 {"type": "division", "inputs": [100, 2]},
-                {"type": "exponentiation", "inputs": [2, 3]} 
+                {"type": "exponentiation", "inputs": [2, 3]},
+                {"type": "modulo", "inputs": [10, 3]} 
             ]
         }
     )
@@ -213,7 +215,7 @@ class CalculationUpdate(BaseModel):
         Raises:
             ValueError: If validation fails
         """
-        allowed_types = {"addition", "subtraction", "multiplication", "division", "exponentiation"}
+        allowed_types = {"addition", "subtraction", "multiplication", "division", "exponentiation", "modulo"}
 
         if self.type is not None and self.type not in allowed_types:
             raise ValueError(f"Invalid type '{self.type}'. Must be one of: {', '.join(allowed_types)}")
