@@ -1,6 +1,20 @@
 DockerHub repo:
 https://hub.docker.com/repository/docker/yk346/601_final/general
 
+
+Open the linux folder where you want to set up a project. See details in the Project Setup section below.
+Clone the calculator project from the github.
+git clone https://github.com/yk346/is_601_final
+enter the local copy of the project via "cd final"
+make sure the virtual environment for python is created and activated via
+python3 -m venv venv
+python3 venv/bin/activate
+
+install requirements via "pip install -r requirements.txt"
+after building the container via "docker compose up --build"
+run the tests locally via "pytest" command.
+
+Run the front end web application locally:
 Frontend link
 http://localhost:8000
 
@@ -19,8 +33,8 @@ what's new:
 
 2) Added front end testing (test_calculator_e2e.py):
 ![alt text](image-5.png)
-unit tests and integration tests are added, see tests/unit/test_calculator.py and tests/integration/test_calculation.py respectively.
 
+unit tests and integration tests are added, see tests/unit/test_calculator.py and tests/integration/test_calculation.py respectively.
 
 
 Checks:
