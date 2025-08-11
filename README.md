@@ -19,6 +19,27 @@ what's new:
 
 2) Added front end testing (test_calculator_e2e.py):
 ![alt text](image-5.png)
+unit tests and integration tests are added, see tests/unit/test_calculator.py and tests/integration/test_calculation.py respectively.
+
+
+
+Checks:
+1) pgAdmin4 (GUI) tool for managing PostgreSQL databases
+http://localhost:5050/browser/
+password:admin
+![alt text](image-7.png)
+register new server
+![alt text](image-8.png)
+after new server registration navigate to Databases->fastapi_db->Schemas->public->Tables
+Check existance of calculaitons and users tables.
+if tables do not exist, rebuit the docker container ("ctr+C" to stop the running containers and "docker compose up --build" to rebuild and run)
+
+2) FastAPI auto-generated documentation using Swagger UI, based on Python code and Pydantic schemas
+http://localhost:8000/docs
+this user interface helps to check backend and web.
+![alt text](image-9.png)
+
+
 
 
 # 📦 Project Setup
